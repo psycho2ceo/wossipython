@@ -1,1 +1,1 @@
-# wossipracujejakojedinej
+# wossipython
