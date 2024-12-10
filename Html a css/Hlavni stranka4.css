@@ -1,0 +1,101 @@
+header {
+  background-color: #4f4f4f;
+  color: #fff;
+  text-align: center;
+  padding: 0.5em;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+body {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.6;
+  background-color: #f4f4f4;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 1.25em;
+}
+.product {
+  width: 31.25em;
+  margin: 1.25em;
+  padding: 0.625em;
+  text-align: center;
+  background-color: #fff;
+  border-radius: 0.5em;
+  box-shadow: 0 0 0.625em rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease-in-out;
+}
+.product:hover {
+  transform: scale(1.05);
+}
+.product img {
+  width: 30em;
+  height: auto;
+  border-radius: 0.5em;
+}
+footer {
+  background-color: #4f4f4f;
+  color: white;
+  text-align: center;
+  position: static;
+  width: 100%;
+  height: 3.125em;
+  bottom: 0;
+}
+h1 {
+  font-size: 2em;
+  margin-left: 21.875em;
+}
+section {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  padding: 1.25em;
+}
+h2 {
+  font-size: 1.4em;
+  margin-top: 0.625em;
+  color: #333;
+  text-align: center;
+}
+p {
+  font-size: 1.5em;
+  text-align: center;
+}
+button {
+  background-color: #4f4f4f;
+  color: #fff;
+  border: none;
+  font-size: 1.125em;
+  padding: 0.9375em 0.75em;
+  cursor: pointer;
+  border-radius: 0.25em;
+  display: inline-block;
+  margin-top: 3.125em;
+  transition: background-color 0.3s ease;
+}
+button:hover {
+  background-color: #3b3b3b;
+}
+a {
+  color: #fff;
+  text-decoration: none;
+}
+.social-media {
+  display: flex;
+  gap: 0.625em;
+}
+.social-media a img {
+  width: 1.875em;
+  height: 1.875em;
+  transition: transform 0.3s ease;
+}
+.social-media a img:hover {
+  transform: scale(1.1);
+}

@@ -1,0 +1,21 @@
+.image-container {
+  width: 300px; /* Šířka kontejneru pro obrázek */
+  height: 300px; /* Výška kontejneru pro obrázek */
+  position: relative; /* Nastaví pozici kontejneru jako relativní */
+  overflow: hidden; /* Skryje obsah, který by přesahoval kontejner */
+}
+
+.moving-image {
+  width: 100%; /* Šířka obrázku 100% kontejneru */
+  position: absolute; /* Nastaví pozici obrázku jako absolutní */
+  animation: moveImage 5s linear infinite; /* Přidá animaci */
+}
+
+@keyframes moveImage {
+  0% {
+    left: 0; /* Začáteční pozice obrázku na levém okraji kontejneru */
+  }
+  100% {
+    left: 200px; /* Konečná pozice obrázku 200px od levého okraje kontejneru */
+  }
+}

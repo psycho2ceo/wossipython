@@ -1,0 +1,12 @@
+
+.image-container {
+  width: 300px; /* Šířka kontejneru pro obrázek */
+  margin: 0 auto; /* Zarovnání na střed stránky */
+}
+
+img {
+  max-width: 100%; /* Zajistí, aby se obrázek přizpůsobil šířce kontejneru */
+  height: auto; /* Udrží původní poměr stran obrázku */
+  display: block; /* Odstraní mezery kolem obrázku */
+  margin: 0 auto; /* Zarovnání na střed kontejneru */
+}
