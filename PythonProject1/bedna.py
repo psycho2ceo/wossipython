@@ -11,7 +11,7 @@ pygame.display.set_caption("Otevírání bedny - Loot boty")
 
 clock = pygame.time.Clock()
 
-# Background (klidně bílý obrázek)
+# Background
 background = pygame.image.load("background.png").convert()
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
@@ -22,11 +22,11 @@ case_img = pygame.transform.scale(case_img, case_size)
 
 # Loot obrázky
 loot_images = {
-    "none": pygame.image.load("af1.png").convert_alpha(),
-    "rare": pygame.image.load("yeezy.png").convert_alpha(),
-    "epic": pygame.image.load("balenciaga.png").convert_alpha(),
-    "mythic": pygame.image.load("crocs.png").convert_alpha(),
-    "legendary": pygame.image.load("rickowens.png").convert_alpha()
+    "none": pygame.image.load("none.png").convert_alpha(),
+    "rare": pygame.image.load("pet.png").convert_alpha(),
+    "epic": pygame.image.load("dva.png").convert_alpha(),
+    "mythic": pygame.image.load("force1.png").convert_alpha(),
+    "legendary": pygame.image.load("dveste.png").convert_alpha()
 }
 
 # Zmenšíme je, ať se vejde hezká řada
@@ -43,13 +43,13 @@ loot_table = [
     ("legendary", 1)
 ]
 
-# Hezké názvy a barvy
+# Názvy a barvy
 loot_names = {
     "none": "Dneska nic. Zkus to znovu",
     "rare": "Sleva 5%",
     "epic": "Sleva 20%",
     "mythic": "Free AirForce1 + doprava zdarma k tomu",
-    "legendary": "200$ kredit v nasem obchode"
+    "legendary": "200$ kredit v našem obchodě"
 }
 
 rarity_colors = {
@@ -76,13 +76,13 @@ center_x = WIDTH // 2
 
 # EKONOMIKA / KREDITY
 crate_price = 20            # cena jedné bedny
-credits = 999999            # prakticky nekonečný kapital pro teď
+credits = 20            # prakticky nekonečný kapital pro teď
 no_credit_until = 0         # do kdy zobrazovat hlášku o nedostatku kreditů (timestamp v ms)
 
 # Stav hry
 running = True
 opening = False
-animation_time = 2500  # ms
+animation_time = 5000  # ms – lehce prodlouženo kvůli dramatu
 start_time = 0
 
 items = []             # list rarit, co se točí
@@ -136,12 +136,16 @@ def start_spin():
 
     base_offset = base_offset_start
 
+def ease_out_quint(t: float) -> float:
+    """Easing funkce: rychlý start, pomalý konec (gamble efekt). t ∈ [0,1]."""
+    return 1 - (1 - t) ** 5
+
 def draw_row_and_get_center_key():
-    """Nakreslí řadu na tmavým pozadí, vrátí rarity key itemu nejblíž středu."""
+    """Nakreslí řadu, vrátí rarity key itemu nejblíž středu."""
     global base_offset
 
-    # Tmavý pruh pod řadou
-    pygame.draw.rect(screen, (15, 15, 15), (0, row_y, WIDTH, row_height))
+    # Pruh pod řadou – barva pozadí
+    pygame.draw.rect(screen, (236, 236, 236), (0, row_y, WIDTH, row_height))
 
     center_key = None
     min_dist = 10**9
@@ -187,18 +191,19 @@ while running:
                     credits -= crate_price
                     start_spin()
                 else:
-                    # Nastavíme čas, do kdy se má zobrazovat warning
                     no_credit_until = pygame.time.get_ticks() + 1500  # 1.5 s hláška
 
     # Logika animace
     if opening:
         now = pygame.time.get_ticks()
         elapsed = now - start_time
-        progress = min(elapsed / animation_time, 1.0)
+        t = max(0.0, min(elapsed / animation_time, 1.0))  # 0–1
 
-        base_offset = base_offset_start + (base_offset_end - base_offset_start) * progress
+        # TADY JE ZMĚNA: easing místo lineárního pohybu
+        eased = ease_out_quint(t)
+        base_offset = base_offset_start + (base_offset_end - base_offset_start) * eased
 
-        if progress >= 1.0:
+        if t >= 1.0:
             # Hotovo – stojíme na výherní botě
             opening = False
             loot_result = win_loot
@@ -230,7 +235,7 @@ while running:
         name = loot_names.get(rarity, rarity.upper())
         color = rarity_colors.get(rarity, (255, 255, 255))
 
-        label_text = label_font.render("Padlo ti", True, (255, 255, 255))
+        label_text = label_font.render("Padlo ti", True, (0, 0, 0))
         label_rect = label_text.get_rect(center=(center_x, row_y + row_height + 30))
         screen.blit(label_text, label_rect)
 
