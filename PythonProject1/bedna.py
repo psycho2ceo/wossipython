@@ -1,7 +1,10 @@
 import pygame
 import random
+import db_utils   # ⬅️ DB
+import time
 
 pygame.init()
+db_utils.init_db()  # ⬅️ DB init
 
 # Okno fullscreen
 info = pygame.display.Info()
@@ -29,12 +32,11 @@ loot_images = {
     "legendary": pygame.image.load("dveste.png").convert_alpha()
 }
 
-# Zmenšíme je, ať se vejde hezká řada
 ITEM_SIZE = 150
 for k in loot_images:
     loot_images[k] = pygame.transform.scale(loot_images[k], (ITEM_SIZE, ITEM_SIZE))
 
-# Pravděpodobnosti
+# Pravděpodobnosti (fallback)
 loot_table = [
     ("none", 80),
     ("rare", 10),
@@ -74,27 +76,27 @@ row_y = HEIGHT // 2 - row_height // 2
 item_y = row_y + (row_height - ITEM_SIZE) // 2
 center_x = WIDTH // 2
 
-# EKONOMIKA / KREDITY
-crate_price = 20            # cena jedné bedny
-credits = 20            # prakticky nekonečný kapital pro teď
-no_credit_until = 0         # do kdy zobrazovat hlášku o nedostatku kreditů (timestamp v ms)
+# EKONOMIKA / KREDITY (⬅️ Z DB)
+crate_price = 20
+user = db_utils.get_user(1)
+credits = user["credits"] if user else 20
+no_credit_until = 0
 
 # Stav hry
 running = True
 opening = False
-animation_time = 5000  # ms – lehce prodlouženo kvůli dramatu
+animation_time = 5000
 start_time = 0
 
-items = []             # list rarit, co se točí
+items = []
 base_offset_start = 0
 base_offset_end = 0
 base_offset = 0
 
-win_loot = None        # rarita, která má padnout
-loot_result = None     # finální výsledek (po dokončení animace)
+win_loot = None
+loot_result = None
 
 def roll_loot():
-    """Výběr lootu podle pravděpodobností."""
     rand = random.randint(1, 100)
     cumulative = 0
     for loot, chance in loot_table:
@@ -104,17 +106,21 @@ def roll_loot():
     return loot_table[-1][0]
 
 def start_spin():
-    """Inicializace nového spinu."""
     global opening, start_time, items
     global base_offset_start, base_offset_end, base_offset
-    global win_loot, loot_result
+    global win_loot, loot_result, credits
 
     opening = True
     start_time = pygame.time.get_ticks()
     loot_result = None
 
-    # Tohle bude rarita, která skončí uprostřed
-    win_loot = roll_loot()
+    # 🔵 JEDINÁ ZMĚNA: DB místo random
+    db_result = db_utils.open_case_local(1, 1)
+    if db_result.get("success"):
+        win_loot = db_result["loot"]["key"]
+        credits = db_result["user_credits"]
+    else:
+        win_loot = roll_loot()
 
     num_items = 40
     win_index = random.randint(15, 25)
@@ -122,60 +128,40 @@ def start_spin():
     keys = list(loot_images.keys())
     items = []
     for i in range(num_items):
-        if i == win_index:
-            items.append(win_loot)
-        else:
-            items.append(random.choice(keys))
+        items.append(win_loot if i == win_index else random.choice(keys))
 
-    # Startovní pozice – celá řada začíná vpravo
     base_offset_start = WIDTH + 50
-
-    # Konečná pozice – win_index přesně uprostřed obrazovky
-    global SLOT_WIDTH
     base_offset_end = center_x - (win_index * SLOT_WIDTH + ITEM_SIZE / 2)
-
     base_offset = base_offset_start
 
-def ease_out_quint(t: float) -> float:
-    """Easing funkce: rychlý start, pomalý konec (gamble efekt). t ∈ [0,1]."""
+def ease_out_quint(t):
     return 1 - (1 - t) ** 5
 
 def draw_row_and_get_center_key():
-    """Nakreslí řadu, vrátí rarity key itemu nejblíž středu."""
     global base_offset
-
-    # Pruh pod řadou – barva pozadí
     pygame.draw.rect(screen, (236, 236, 236), (0, row_y, WIDTH, row_height))
 
     center_key = None
     min_dist = 10**9
 
-    # Loot položky
     for idx, key in enumerate(items):
         x = base_offset + idx * SLOT_WIDTH
         if x + ITEM_SIZE < 0 or x > WIDTH:
-            continue  # mimo obrazovku
-
+            continue
         screen.blit(loot_images[key], (x, item_y))
-
-        # Zjištění, která bota je nejblíž středu
-        x_center = x + ITEM_SIZE / 2
-        dist = abs(x_center - center_x)
+        dist = abs((x + ITEM_SIZE / 2) - center_x)
         if dist < min_dist:
             min_dist = dist
             center_key = key
 
-    # Highlight slot uprostřed (rámeček)
-    highlight_rect = pygame.Rect(
-        center_x - ITEM_SIZE // 2 - 10,
-        item_y - 10,
-        ITEM_SIZE + 20,
-        ITEM_SIZE + 20
+    pygame.draw.rect(
+        screen, (255, 255, 255),
+        (center_x - ITEM_SIZE // 2 - 10, item_y - 10, ITEM_SIZE + 20, ITEM_SIZE + 20), 3
     )
-    pygame.draw.rect(screen, (255, 255, 255), highlight_rect, 3)
 
     return center_key
 
+# ---------------- MAIN LOOP ----------------
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -186,75 +172,36 @@ while running:
                 running = False
 
             if event.key == pygame.K_SPACE and not opening:
-                # Pokus o otevření bedny → kontrola kreditu
                 if credits >= crate_price:
-                    credits -= crate_price
                     start_spin()
                 else:
-                    no_credit_until = pygame.time.get_ticks() + 1500  # 1.5 s hláška
+                    no_credit_until = pygame.time.get_ticks() + 1500
 
-    # Logika animace
     if opening:
-        now = pygame.time.get_ticks()
-        elapsed = now - start_time
-        t = max(0.0, min(elapsed / animation_time, 1.0))  # 0–1
-
-        # TADY JE ZMĚNA: easing místo lineárního pohybu
-        eased = ease_out_quint(t)
-        base_offset = base_offset_start + (base_offset_end - base_offset_start) * eased
-
-        if t >= 1.0:
-            # Hotovo – stojíme na výherní botě
+        t = min((pygame.time.get_ticks() - start_time) / animation_time, 1)
+        base_offset = base_offset_start + (base_offset_end - base_offset_start) * ease_out_quint(t)
+        if t >= 1:
             opening = False
             loot_result = win_loot
 
-    # Vykreslení
     screen.blit(background, (0, 0))
 
-    # Cena bedny a kredity nahoře
-    price_text = info_font.render(f"Cena bedny: ${crate_price}", True, (0, 0, 0))
-    screen.blit(price_text, (20, 20))
-
-    credits_text = info_font.render(f"Kredity: ${credits}", True, (0, 0, 0))
-    credits_rect = credits_text.get_rect(topright=(WIDTH - 20, 20))
-    screen.blit(credits_text, credits_rect)
-
-    # Bedna – zmizí, když máme výsledek
     if loot_result is None:
-        case_x = (WIDTH - case_size[0]) // 2
-        case_y = HEIGHT // 6
-        screen.blit(case_img, (case_x, case_y))
+        screen.blit(case_img, ((WIDTH - case_size[0]) // 2, HEIGHT // 6))
 
-    center_key = None
     if items:
-        center_key = draw_row_and_get_center_key()
+        draw_row_and_get_center_key()
 
-    # Text k výsledku – pod řadou
-    if loot_result is not None and center_key is not None:
-        rarity = loot_result
-        name = loot_names.get(rarity, rarity.upper())
-        color = rarity_colors.get(rarity, (255, 255, 255))
+    if loot_result:
+        txt = result_font.render(
+            f"{loot_names[loot_result]} [{loot_result.upper()}]",
+            True, rarity_colors[loot_result]
+        )
+        screen.blit(txt, txt.get_rect(center=(center_x, row_y + row_height + 70)))
 
-        label_text = label_font.render("Padlo ti", True, (0, 0, 0))
-        label_rect = label_text.get_rect(center=(center_x, row_y + row_height + 30))
-        screen.blit(label_text, label_rect)
-
-        result_str = f"{name} [{rarity.upper()}]"
-        result_text = result_font.render(result_str, True, color)
-        result_rect = result_text.get_rect(center=(center_x, row_y + row_height + 70))
-        screen.blit(result_text, result_rect)
-
-    # Info text dole
-    info_text = info_font.render("SPACE = otevřít bednu | ESC = konec", True, (0, 0, 0))
-    info_rect = info_text.get_rect(midbottom=(WIDTH // 2, HEIGHT - 20))
-    screen.blit(info_text, info_rect)
-
-    # Hláška při nedostatku kreditu
-    now_time = pygame.time.get_ticks()
-    if now_time < no_credit_until:
-        warn_text = info_font.render("Nedostatek kreditů!", True, (200, 0, 0))
-        warn_rect = warn_text.get_rect(midbottom=(WIDTH // 2, HEIGHT - 60))
-        screen.blit(warn_text, warn_rect)
+    screen.blit(info_font.render(f"Kredity: ${credits}", True, (0,0,0)), (20,20))
+    screen.blit(info_font.render("SPACE = otevřít | ESC = konec", True, (0,0,0)),
+                (WIDTH//2 - 150, HEIGHT - 30))
 
     pygame.display.flip()
     clock.tick(60)
