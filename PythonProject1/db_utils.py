@@ -49,17 +49,17 @@ def init_db():
 
     if first:
         c.execute("INSERT INTO users (username, credits, created_at) VALUES (?,?,?)",
-                  ("demo", 2000, int(time.time())))
+                  ("demo", 20000000000, int(time.time())))
 
         c.execute("INSERT INTO cases (name, price_cents) VALUES (?,?)",
-                  ("Hyper Bedna", 2000))
+                  ("Hyper Bedna", 20))
         case_id = c.lastrowid
 
         loots = [
-            ("none", "Dneska nic", 80, "{}"),
-            ("rare", "Sleva 5%", 10, "{}"),
-            ("epic", "Sleva 20%", 5, "{}"),
-            ("mythic", "AirForce1 zdarma", 4, "{}"),
+            ("none", "Dneska nic", 90, "{}"),
+            ("rare", "Sleva 5%", 4, "{}"),
+            ("epic", "Sleva 20%", 3, "{}"),
+            ("mythic", "AirForce1 zdarma", 2, "{}"),
             ("legendary", "200$ kredit", 1, '{"type":"credits","amount":20000}')
         ]
 
