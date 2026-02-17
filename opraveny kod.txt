@@ -1,0 +1,35 @@
+Table users {
+  id int [pk, increment]
+  username text [unique, not null]
+  credits int [default: 0]
+  created_at int
+}
+
+Table cases {
+  id int [pk, increment]
+  name text
+  price_cents int
+}
+
+Table loot_items {
+  id int [pk, increment]
+  case_id int
+  key_name text
+  display_name text
+  weight int
+  payload text
+}
+
+Table case_openings {
+  id int [pk, increment]
+  user_id int
+  case_id int
+  loot_item_id int
+  outcome text
+  created_at int
+}
+
+Ref: loot_items.case_id > cases.id
+Ref: case_openings.user_id > users.id
+Ref: case_openings.case_id > cases.id
+Ref: case_openings.loot_item_id > loot_items.id
