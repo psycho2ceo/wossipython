@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyper Harbour | Historie</title>
+    <style>
+        :root {
+            --bg: #f4f6fb;
+            --card: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --line: #e5e7eb;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            background: linear-gradient(180deg, #f7f8fb 0%, #eef2f7 100%);
+            color: var(--text);
+        }
+        header {
+            background: #111827;
+            color: white;
+            padding: 22px 28px;
+        }
+        .wrap {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .title {
+            font-size: 34px;
+            font-weight: 800;
+            margin: 0;
+        }
+        .subtitle {
+            color: #cbd5e1;
+            margin-top: 8px;
+        }
+        .nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 16px;
+            font-weight: 700;
+        }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(17, 24, 39, 0.06);
+            padding: 18px;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--line);
+            font-size: 15px;
+        }
+        th {
+            color: var(--muted);
+            font-weight: 700;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        tr:hover td {
+            background: #fafafa;
+        }
+        .back {
+            display: inline-block;
+            margin-top: 16px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: #111827;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .empty {
+            color: var(--muted);
+            padding: 12px 0;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="nav">
+            <a href="/">Leaderboard</a>
+            <a href="/history">Historie</a>
+        </div>
+        <h1 class="title">Historie otevření</h1>
+        <div class="subtitle">Všechna poslední otevření z databáze</div>
+    </div>
+</header>
+
+<div class="wrap">
+    <div class="card">
+        <table>
+            <thead>
+            <tr>
+                <th>Username</th>
+                <th>Win</th>
+                <th>Value</th>
+                <th>Time</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for row in rows %}
+            <tr>
+                <td>{{ row.username }}</td>
+                <td>{{ row.loot_name }}</td>
+                <td>${{ row.loot_price }}</td>
+                <td>{{ row.time }}</td>
+            </tr>
+            {% else %}
+            <tr><td colspan="4" class="empty">Zatím žádná historie.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <a class="back" href="/">Zpět</a>
+    </div>
+</div>
+</body>
+</html>
