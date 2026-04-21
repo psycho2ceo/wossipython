@@ -1,0 +1,44 @@
+Table users {
+  id int [pk, increment]
+  username varchar [unique, not null]
+  credits int [default: 0]
+  created_at int
+}
+
+Table cases {
+  id int [pk, increment]
+  name varchar
+  price_cents int
+}
+
+Table loot_items {
+  id int [pk, increment]
+  key_name text
+  display_name text
+  payload text
+}
+
+Table case_loot_items {
+  case_id int
+  loot_item_id int
+  weight int
+  price  int
+
+  indexes {
+    (case_id, loot_item_id) [pk]
+  }
+}
+
+Table case_openings {
+  id int [pk, increment]
+  user_id int
+  loot_item_id int
+  created_at int
+}
+
+Ref: case_loot_items.case_id > cases.id
+Ref: case_loot_items.loot_item_id > loot_items.id
+Ref: case_openings.user_id > users.id
+
+
+Ref: "case_loot_items"."case_id" < "case_openings"."loot_item_id"
